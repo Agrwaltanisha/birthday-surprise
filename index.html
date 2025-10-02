@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Birthday Adventure</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    overflow: hidden;
+  }
+
+  .emoji-row {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 1rem 0;
+    flex-wrap: nowrap;
+  }
+
+  .floating-icon {
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .floating-icon:hover {
+    transform: scale(1.4) rotate(10deg);
+  }
+
+  .message-bubble {
+    position: fixed;
+    background: #ffdde1;
+    border: 2px solid #ff8fab;
+    padding: 0.8rem 1.2rem;
+    border-radius: 1rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.4s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .message-bubble.show { opacity: 1; }
+
+  .final-surprise {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255,255,255,0.95);
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 2rem;
+    border-radius: 2rem;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container" class="w-full h-screen relative flex flex-col items-center justify-center">
+  <h1 class="text-4xl font-bold text-pink-600 mb-6">🌸 ITNA HI HO PAYA HUMSE 🌸</h1>
+  <p id="instruction-text" class="text-lg text-gray-700 mb-6">Click all the emojis one by one to see random ass messages :) </p>
+
+  <div id="emoji-container">
+    <!-- Two rows of emojis will be added here -->
+  </div>
+
+  <div id="final-surprise" class="final-surprise">
+    <h2 class="text-5xl font-bold text-red-500 mb-4"> Prem Letter 🔊</h2>
+    <p id="final-text">Rishaabbbbbbb
+It's your dayyyyyyyy ( doesn't matter it's man-made shit or something elseee) and I'm so happy that I get to share this day with you. I love you so fucking much. Okay point pe aate hai ab, toh mai samjhti abhi waqt todha kharab chal raha hai dono ka hi apne apne jagah pe and you're going through a lot internally, but you don't share everything, and that's okay. I just want you to be happy, and I have faith in you that you'll figure everything out slowly. So, take your time and think about the purpose you want to serve. I'll be there with you and mai apne taraf se tumhe koi bhi pressure nahi feel karwana chahti ki as a boyfriend you have to do this/ that shit. Okay Byeeee</p>
+  </div>
+</div>
+
+<div id="message-bubble" class="message-bubble"></div>
+
+<script>
+  const container = document.getElementById('game-container');
+  const emojiContainer = document.getElementById('emoji-container');
+  const messageBubble = document.getElementById('message-bubble');
+  const finalSurprise = document.getElementById('final-surprise');
+  const instruction = document.getElementById('instruction-text');
+
+  const messages = [
+    { icon: '🔑', text: 'You are the key to my heart ' },
+    { icon: '😽', text: 'Tumhare muskuraate hue chehre pe fidaa hai hum ' },
+    { icon: '🍑', text: 'My favourite part of your body (after smile)' },
+    { icon: '💕', text: 'Nānu ninnannu anantavāgi prītisuttēneeeeee' },
+    { icon: '🧸', text: 'You are my cutu cuddly teddy ' },
+    { icon: '🕺', text: 'We need more practice, but I love watching you dance. Hope we have more moments like this' },
+    { icon: '🌅', text: 'Sunset looks better with you ' },
+    { icon: '🌙', text: 'Chaand Sifarish Jo Karta Tumhari Deta Woh Humko Bata Sharm-O-Haya Pe Parde Gira Ke Karni Hain Hamko Khata🌙' },
+    { icon: '🌸', text: 'Your texts make my day bloom, and I wait for them every morning' },
+    { icon: '🍀', text: 'I feel so lucky to have you ' },
+    { icon: '🐥', text: 'This is me your cute little obsessed chick' },
+    { icon: '🕊️', text: 'You bring SUKOON to my heart ' },
+    { icon: '🍕', text: 'Even tho I dont eat pizza much, but I will with you always' },
+    { icon: '💡', text: 'Just like a bulb, you light up my life' },
+    { icon: '🌻', text: 'Nīnu nanna sūryakānti' },
+    { icon: '🥥', text: 'You are my perfect cocooo-nut (hehe)' },
+    { icon: '🎉', text: 'Life is an adventure with you - exploring random roads, beaches, and jungles together' },
+    { icon: '📷', text: 'I love how you see things around you ,capture them and then discuss it with me' },
+    { icon: '💎', text: 'You are precious I want you to get everything you have wished for and see you succeed' },
+    { icon: '🧿', text: 'No nazar to you, me and us' }
+  ];
+
+  let found = 0;
+  let bgAudio = null;
+
+  function spawnEmojis() {
+    const row1 = document.createElement('div');
+    row1.className = 'emoji-row mb-4';
+    const row2 = document.createElement('div');
+    row2.className = 'emoji-row';
+
+    messages.forEach((msg, i) => {
+      const el = document.createElement('div');
+      el.className = 'floating-icon';
+      el.textContent = msg.icon;
+      el.dataset.text = msg.text;
+      el.onclick = () => handleClick(el, msg);
+
+      if(i < 10) row1.appendChild(el);
+      else row2.appendChild(el);
+    });
+
+    emojiContainer.appendChild(row1);
+    emojiContainer.appendChild(row2);
+  }
+
+  function handleClick(el, msg) {
+    messageBubble.textContent = msg.text;
+    const rect = el.getBoundingClientRect();
+    messageBubble.style.left = rect.left + 'px';
+    messageBubble.style.top = rect.top - 50 + 'px';
+    messageBubble.classList.add('show');
+
+    setTimeout(() => messageBubble.classList.remove('show'), 2000);
+
+    new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg').play();
+
+    el.style.opacity = '0.5';
+    el.style.pointerEvents = 'none';
+    found++;
+    instruction.textContent = `Messages found: ${found}/${messages.length}`;
+
+    if(found === messages.length) showFinalSurprise();
+  }
+
+  function showFinalSurprise() {
+  document.querySelectorAll('.floating-icon').forEach(e => e.remove());
+  finalSurprise.style.display = 'flex';
+  spawnBalloons(40);
+
+  if (!bgAudio) {
+    // Use your uploaded MP3 file
+    bgAudio = new Audio('happybirthday02.mp3'); 
+    bgAudio.loop = true;
+    bgAudio.play();
+  } else {
+    bgAudio.play();
+  }
+}
+
+  function spawnBalloons(count){
+    for(let i=0; i<count; i++){
+      const b = document.createElement('div');
+      b.textContent = '🎈';
+      b.style.position = 'absolute';
+      b.style.left = Math.random()*100 + 'vw';
+      b.style.bottom = '-50px';
+      b.style.fontSize = '2rem';
+      container.appendChild(b);
+      let duration = 5 + Math.random()*5;
+      b.animate([{transform: 'translateY(0)'}, {transform: 'translateY(-120vh)'}], {duration: duration*1000, iterations:1, easing:'ease-out'});
+      setTimeout(() => b.remove(), duration*1000);
+    }
+  }
+
+  spawnEmojis();
+</script>
+
+</body>
+</html>
